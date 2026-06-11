@@ -1,0 +1,12 @@
+# Ultralytics dataset config - Member 3 (Obstruction & boundary hazards)
+# Adjust `path` to an absolute path on your machine before training.
+path: ../data/member3
+train: images/train
+val: images/val
+
+names:
+  0: uncovered_manhole
+  1: dangling_wire
+  2: obstacle_on_walkway
+  3: fallen_branch
+  4: missing_barricade

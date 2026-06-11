@@ -1,0 +1,33 @@
+# --- Dataset: assignment says annotated dataset must NOT be public ---
+# Share it via Google Drive with the instructor instead. Keep folder structure
+# (tracked via .gitkeep / README) but never commit images or label files.
+data/**/images/**
+data/**/labels/**
+data/meta_classifier/*.npz
+!**/.gitkeep
+!**/README.md
+
+# --- Trained model weights (share via Drive; large binaries) ---
+models/
+*.pt
+*.onnx
+*.tflite
+runs/            # ultralytics training output
+
+# --- Secrets ---
+.env
+*.key
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# --- Flutter / mobile ---
+mobile_app/build/
+mobile_app/.dart_tool/
+mobile_app/.flutter-plugins*
+
+.claude

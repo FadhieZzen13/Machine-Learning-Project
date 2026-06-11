@@ -1,0 +1,86 @@
+# =============================================================================
+# CSC4602 - Campus Hazard Detection
+# Zone: Bus Stop & Waiting Area
+# Group: 3 members
+#
+# This file is the SINGLE SOURCE OF TRUTH for class definitions.
+# - Each member trains ONE YOLO model over 5 classes (per-member ids 0-4).
+# - Assignment rule: >= 2 classes per member must OVERLAP with other members.
+# - The meta-classifier outputs the GLOBAL class set (union of all classes).
+#
+# Overlap design (each overlapping class is detected by >= 2 members; the
+# meta-classifier uses cross-model agreement on these as a key feature):
+#   pothole              -> member1, member2
+#   uncovered_manhole    -> member1, member3
+#   obstacle_on_walkway  -> member1, member3
+#   dangling_wire        -> member2, member3
+# =============================================================================
+
+zone: "Bus Stop & Waiting Area"
+
+# --- Per-member YOLO models (5 classes each, ids are LOCAL to that model) ---
+members:
+  member1:
+    focus: "Ground & surface hazards (pavement, road around the stop)"
+    classes: # local_id: name
+      0: pothole              # OVERLAP (with member2)
+      1: uncovered_manhole    # OVERLAP (with member3)
+      2: open_drain
+      3: cracked_pavement
+      4: obstacle_on_walkway  # OVERLAP (with member3)
+
+  member2:
+    focus: "Shelter structure & electrical hazards (seating, roof, lighting)"
+    classes:
+      0: pothole              # OVERLAP (with member1)
+      1: dangling_wire        # OVERLAP (with member3)
+      2: broken_bench
+      3: broken_shelter_panel
+      4: exposed_socket
+
+  member3:
+    focus: "Obstruction & boundary hazards (access, barriers, debris)"
+    classes:
+      0: uncovered_manhole    # OVERLAP (with member1)
+      1: dangling_wire        # OVERLAP (with member2)
+      2: obstacle_on_walkway  # OVERLAP (with member1)
+      3: fallen_branch
+      4: missing_barricade
+
+# --- GLOBAL class set: union of all member classes (meta-classifier output) ---
+# Order is fixed; index = global_id used by the meta-classifier softmax.
+global_classes:
+  0: pothole
+  1: uncovered_manhole
+  2: open_drain
+  3: cracked_pavement
+  4: obstacle_on_walkway
+  5: dangling_wire
+  6: broken_bench
+  7: broken_shelter_panel
+  8: exposed_socket
+  9: fallen_branch
+  10: missing_barricade
+
+# --- Parent / hierarchical categories (used for generalisation feature) ---
+parents:
+  hole_in_ground: [pothole, uncovered_manhole, open_drain]
+  surface_defect: [cracked_pavement]
+  electrical: [dangling_wire, exposed_socket]
+  structural: [broken_bench, broken_shelter_panel]
+  obstruction: [obstacle_on_walkway, fallen_branch]
+  boundary: [missing_barricade]
+
+# --- Default severity per global class (overridable by LLM/context) ---
+severity:
+  pothole: medium
+  uncovered_manhole: high
+  open_drain: high
+  cracked_pavement: low
+  obstacle_on_walkway: medium
+  dangling_wire: high
+  broken_bench: low
+  broken_shelter_panel: medium
+  exposed_socket: high
+  fallen_branch: medium
+  missing_barricade: medium

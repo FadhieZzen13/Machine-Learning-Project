@@ -1,0 +1,15 @@
+# Ultralytics dataset config - Member 1 (Ground & surface hazards)
+# Paths are relative to this file's location is NOT assumed by ultralytics;
+# `path` should be an absolute path or relative to your CWD when training.
+# Adjust `path` to your machine before training.
+path: ../data/member1
+train: images/train
+val: images/val
+
+# Local class ids for THIS model (must match config/classes.yaml -> member1)
+names:
+  0: pothole
+  1: uncovered_manhole
+  2: open_drain
+  3: cracked_pavement
+  4: obstacle_on_walkway

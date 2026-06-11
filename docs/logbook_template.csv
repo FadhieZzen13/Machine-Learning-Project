@@ -1,0 +1,4 @@
+Date,Member,Task,Man-Hour,Output,Problem,Next Action
+10/6/2026,Member1,Collected pothole images at main bus stop,2.0,90 images,Low lighting,Collect more daytime images
+11/6/2026,Member2,Annotated dangling wire images,3.5,120 labels,Similar to exposed socket,Refine label rule per global_label_mapping
+12/6/2026,Member3,Trained initial YOLO model,1.5,mAP@0.5=0.74,Low recall on fallen_branch,Add augmentation

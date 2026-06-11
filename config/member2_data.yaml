@@ -1,0 +1,12 @@
+# Ultralytics dataset config - Member 2 (Shelter structure & electrical hazards)
+# Adjust `path` to an absolute path on your machine before training.
+path: ../data/member2
+train: images/train
+val: images/val
+
+names:
+  0: pothole
+  1: dangling_wire
+  2: broken_bench
+  3: broken_shelter_panel
+  4: exposed_socket
