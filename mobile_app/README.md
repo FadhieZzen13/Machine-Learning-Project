@@ -1,8 +1,45 @@
-# Mobile App (Flutter) — plan & structure
+# Mobile App (Flutter)
 
-Owner: **M3**. Not yet scaffolded with `flutter create` (do that on a machine
-with the Flutter SDK installed). This README defines the target structure and
-how it connects to the ML pipeline.
+Owner: **M3**. The **Dart source is scaffolded** in `lib/` (backend approach).
+The platform folders (`android/`, `ios/`) are NOT generated yet — see "Run it"
+below. This README documents the structure and how it connects to the pipeline.
+
+## What's already here (`lib/`)
+| File | Purpose |
+|------|---------|
+| `main.dart` | App entry; gets cameras, launches the screen |
+| `config.dart` | **Backend URL** + zone + auto-detect interval (edit this first) |
+| `models.dart` | `HazardResult` — parses the backend /infer JSON |
+| `api_client.dart` | Calls backend `/infer` (multipart image) and `/health` |
+| `screens/camera_screen.dart` | Live preview, Detect button, result list, Save evidence |
+| `widgets/detection_painter.dart` | Draws boxes + labels, colour by severity |
+| `services/evidence_store.dart` | Saves screenshot + timestamp + JSON record |
+
+The app talks to the **Flask backend** in `../backend/` (which runs the YOLO
+models + meta-classifier + LLM). This reuses all the Python code instead of
+re-implementing inference in Dart.
+
+## Run it
+The lib/ code is ready, but Flutter needs the platform scaffolding generated:
+```bash
+# 1) install Flutter SDK (https://docs.flutter.dev/get-started/install)
+# 2) from mobile_app/, generate android/ios projects INTO this folder:
+flutter create .
+flutter pub get
+# 3) start the backend on your computer (same Wi-Fi as the phone):
+#    cd ../backend && python app.py
+# 4) set AppConfig.backendBaseUrl in lib/config.dart to your machine's IP
+#    (Android emulator: http://10.0.2.2:5000)
+flutter run
+```
+Add **camera permission**: `android/app/src/main/AndroidManifest.xml`
+(`<uses-permission android:name="android.permission.CAMERA"/>`) and iOS
+`NSCameraUsageDescription` in `ios/Runner/Info.plist`. (`flutter create` plus the
+`camera` plugin docs cover the exact lines.)
+
+> Current behaviour: tap **Detect** to capture a frame → backend infers → boxes
+> + actions overlay. Continuous live streaming (auto-detect loop) is a planned
+> enhancement; capture-on-tap is enough for the demo and is simpler/robust.
 
 ## Required features (assignment §10)
 - Real-time inference from the **device camera** (live frames).
