@@ -45,9 +45,20 @@ python ml/meta_classifier/label_harmonization.py     # sanity-check class design
 cd ml/meta_classifier && python feature_extraction.py # sanity-check features
 ```
 
+## Roles
+- **M1 & M2 — data team:** lead all data collection + annotation; each trains
+  their own YOLO model with M3's pipeline (assignment requires every member to
+  train one model).
+- **M3 — technical lead (project leader):** all shared/system code — training
+  pipeline, meta-classifier, mobile app, LLM integration, end-to-end testing;
+  trains own YOLO model too.
+
+Full breakdown: [docs/project_plan.md §2](docs/project_plan.md).
+
 ## Class & overlap design at a glance
-| Member | Focus | Overlap classes |
-|--------|-------|-----------------|
+Each member owns one **dataset/model** of 5 classes (1:1 with the YOLO models):
+| Dataset/model | Focus | Overlap classes |
+|---------------|-------|-----------------|
 | M1 | Ground & surface | pothole, uncovered_manhole, obstacle_on_walkway |
 | M2 | Shelter & electrical | pothole, dangling_wire |
 | M3 | Obstruction & boundary | uncovered_manhole, dangling_wire, obstacle_on_walkway |
