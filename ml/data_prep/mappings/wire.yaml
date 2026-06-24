@@ -1,0 +1,24 @@
+# Wire-defect / electrical dataset -> dangling_wire
+#   Roboflow: deepedge/wire-defect-detection-yneog-yains
+#   Roboflow search: class:electrical (filter exposed-wire / electrical-hazard)
+#
+# Works for member2 (id1) and member3 (id1).
+#   python prepare_dataset.py --source <dir> --member member2 --mapping mappings/wire.yaml
+#   python prepare_dataset.py --source <dir> --member member3 --mapping mappings/wire.yaml
+#
+# ⚠️ Don't merge a wall SOCKET defect into dangling_wire — exposed_socket is a
+# separate class (member2 only). Run --list and map carefully.
+map:
+  exposed_wire: dangling_wire
+  dangling_wire: dangling_wire
+  hanging_wire: dangling_wire
+  electrical_hazard: dangling_wire
+  # --- shella/wires-gklgc (converted from COCO via coco_to_yolo.py) ---
+  wire: dangling_wire        # loose/hanging wires (839 boxes) -> our hazard
+  power_pole: null           # infrastructure, not a walkway hazard -> drop
+  transmission_line: null    # overhead grid lines, not a bus-stop hazard -> drop
+  tree: null                 # not a wire hazard -> drop
+  # --- dooropen/wires-ydroy (3275 open_wires boxes, segmentation) ---
+  open_wires: dangling_wire  # exposed/loose wiring -> our hazard
+  faulty_board: null         # electrical board defect, not a dangling wire -> drop
+  exposed_socket: null     # only map to exposed_socket via a member2-specific run

@@ -1,0 +1,29 @@
+# Obstacle-detection dataset -> obstacle_on_walkway (+ uncovered_manhole if present)
+#   Roboflow: visually-impaired-obstacle-detection-uxdze/obstacle-detection-yeuzf/11
+#   (9k+ images; has obstacle classes AND "Uncovered manhole")
+#
+# Works for member1 and member3 (both have obstacle_on_walkway + uncovered_manhole).
+#   python prepare_dataset.py --source <dir> --member member1 --mapping mappings/obstacle.yaml
+#   python prepare_dataset.py --source <dir> --member member3 --mapping mappings/obstacle.yaml
+#
+# ⚠️ This dataset has MANY classes. Run --list first and decide which generic
+# obstacles you want to treat as obstacle_on_walkway. Keep it consistent with
+# docs/global_label_mapping.md. Everything you don't map is dropped.
+map:
+  obstacle: obstacle_on_walkway
+  obstacle_on_walkway: obstacle_on_walkway
+  box: obstacle_on_walkway
+  pole: obstacle_on_walkway
+  uncovered_manhole: uncovered_manhole
+  "Uncovered manhole": uncovered_manhole
+  # --- project-ganpo/road-obstacle-detection v2 (real source classes) ---
+  obstacles: obstacle_on_walkway          # 223 boxes — generic path obstructions
+  worksite_materials: obstacle_on_walkway # 62 — construction debris blocking path
+  stalls: obstacle_on_walkway             # 26 — vendor stalls obstructing walkway
+  LMVs: null                              # light motor vehicles — not our hazard
+  four_wheelers: null                     # cars — drop
+  road: null                              # road surface (polygon labels) — drop
+  # examples to DROP (not relevant to a bus stop walkway):
+  person: null
+  car: null
+  bicycle: null
