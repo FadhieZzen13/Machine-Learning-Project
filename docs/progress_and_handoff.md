@@ -15,7 +15,7 @@ deeper background see [project_plan.md](project_plan.md) and the per-member
 - Flask backend ([backend/app.py](../backend/app.py)) — `/health`, `/recommend`
   (LLM + offline) working; `/infer` returns 503 until all models exist (by design).
 - Meta-classifier code ([ml/meta_classifier/](../ml/meta_classifier/)) —
-  feature extraction (57-dim), label harmonisation, build + train scripts.
+  feature extraction (70-dim with 4 models), label harmonisation, build + train scripts.
 - LLM recommendations ([ml/llm/recommend_action.py](../ml/llm/recommend_action.py))
   — Gemini with offline fallback.
 - Flutter app scaffold ([mobile_app/](../mobile_app/)) — camera → `/infer` →
@@ -49,13 +49,20 @@ deeper background see [project_plan.md](project_plan.md) and the per-member
 | member3 model | ✅ trained (`models/member3.pt`) | needs `missing_barricade` data to be complete |
 | member1 model | 🔴 no data yet | M1 must run the steps in Part C |
 | member2 model | 🔴 no data yet | M2 must run the steps in Part D |
-| meta-classifier | 🔴 not started | needs all 3 `.pt` models |
-| backend `/infer` | 🟡 returns 503 | needs all 3 models + meta-classifier |
+| member4 model | 🔴 no data yet | M4 must run the steps in Part D2 |
+| meta-classifier | 🔴 not started | needs all 4 `.pt` models |
+| backend `/infer` | 🟡 returns 503 | needs all 4 models + meta-classifier |
 | mobile app | 🟡 scaffolded | needs backend live + device test |
 | LLM recommendations | ✅ done | — |
 
-**Critical path: M1 and M2 have zero data. The ensemble cannot exist until all
-three models do.** This is the top priority.
+**Critical path: M1, M2 and M4 have zero data. The ensemble cannot exist until
+all four models do.** This is the top priority.
+
+> **4th member added.** The group grew from 3 to 4. Member 4 trains a 4th YOLO
+> model giving a **second detector** to five classes that previously had only
+> one (`open_drain, broken_bench, broken_shelter_panel, exposed_socket,
+> fallen_branch`). Global classes stay at 11; the meta-classifier feature vector
+> grew **57 → 70 dims** (handled in code via `feature_extraction.MODEL_ORDER`).
 
 ---
 
@@ -143,10 +150,37 @@ python -c "from ultralytics import YOLO; YOLO('yolov8n.pt').train(data='config/m
 
 ---
 
-## Part E — Meta-classifier (M3, once all 3 models exist)
+## Part D2 — Member 4 (Fixtures, drainage & debris)
+
+Classes: `open_drain, broken_bench, broken_shelter_panel, exposed_socket, fallen_branch`
+— **all overlaps**, all second-pass coverage. Full guide:
+[instructions_member4.md](instructions_member4.md).
+
+**Step 1 — reuse what M3 already has** (`fallen_branch`):
+```powershell
+python prepare_dataset.py --source "D:/ML dataset/branches" --member member4 --mapping mappings/branch.yaml --mix-split
+```
+
+**Step 2 — own photos for the rest.** `open_drain`, `broken_bench`,
+`broken_shelter_panel`, `exposed_socket` have **no public datasets** — they're
+bus-stop fixtures, so photograph them directly at the stop (~80 each). Coordinate
+with M1 (drain) and M2 (bench/panel/socket) to shoot the **same** objects.
+
+**Step 3 — set path:** edit `config/member4_data.yaml` `path:` to absolute.
+
+**Step 4 — train:**
+```powershell
+python -c "from ultralytics import YOLO; YOLO('yolov8n.pt').train(data='config/member4_data.yaml', epochs=100, imgsz=640, batch=8, device=0, patience=20, project='runs', name='member4', exist_ok=True)"
+```
+
+**Step 5 — hand off:** copy `best.pt` to `models/member4.pt` and tell M3.
+
+---
+
+## Part E — Meta-classifier (M3, once all 4 models exist)
 
 1. Assemble a **shared pool** of labelled images (ideally real bus-stop frames)
-   that all three models will score on → `data/meta_classifier/`.
+   that all four models will score on → `data/meta_classifier/`.
 2. Build features:
    ```powershell
    python ml/meta_classifier/build_meta_dataset.py --images data/meta_classifier/images --labels data/meta_classifier/labels --out data/meta_classifier/features.npz

@@ -12,7 +12,7 @@ and [`global_label_mapping.md`](global_label_mapping.md); this document covers
 
 ```
 Mobile camera frame
-   → YOLO model M1 + YOLO model M2 + YOLO model M3   (each: boxes, labels, conf)
+   → YOLO model M1 + M2 + M3 + M4   (each: boxes, labels, conf)
    → Label harmonisation   (exact / synonym / parent / contextual)   [label_harmonization.py]
    → IoU box matching → group detections of the same object          [feature_extraction.py]
    → Feature vector per object group                                  [feature_extraction.py]
@@ -22,51 +22,52 @@ Mobile camera frame
    → Mobile app overlay: box + final label + confidence + severity + action
 ```
 
-The feature vector dimension is currently **57** (verified by running
+The feature vector dimension is **70** with 4 models (verified by running
 `feature_extraction.py`): per-model blocks (present, confidence, 11-class
-one-hot) × 3 + 5 box features + 2 agreement features + 5 zone one-hot + 6 parent
-one-hot.
+one-hot) × 4 + 5 box features + 2 agreement features + 5 zone one-hot + 6 parent
+one-hot. (It was 57 with 3 models; adding member4 grows it by one 13-wide block.)
 
 ---
 
 ## 2. Member roles
 
-**Split:** M1 & M2 are the **data team** (collection + annotation), M3 (project
-leader) is the **technical lead** (all shared system code + integration).
+**Split:** M1, M2 & M4 are the **data team** (collection + annotation), M3
+(project leader) is the **technical lead** (all shared system code + integration).
 
 > ⚠️ **Hard constraint:** the assignment requires that *each member trains one
 > YOLO model* (5 classes) and logs their own man-hours — this is individually
 > marked (§16: 15 marks for individual YOLO training). So M1 and M2 cannot be
 > purely data-only. The split below keeps their **technical load minimal**: M3
-> sets up the training notebook + pipeline, and M1/M2 each just run *their own*
+> sets up the training notebook + pipeline, and M1/M2/M4 each just run *their own*
 > model's training with it and record the metrics. All other coding is M3's.
 
 | Member | Primary responsibility | Owns (technical) | Report sections led |
 |--------|------------------------|------------------|---------------------|
-| **M1** (data) | Lead data collection + annotation for the **ground/surface + structural** classes; help annotate across all datasets | Trains **own** YOLO model (M1 classes) using M3's notebook | §4 Data collection & annotation |
-| **M2** (data) | Lead data collection + annotation for the **electrical + obstruction/boundary** classes; help annotate across all datasets | Trains **own** YOLO model (M2 classes) using M3's notebook | §4 Data collection & annotation (co-lead) |
+| **M1** (data) | Lead data collection + annotation for the **ground/surface** classes; help annotate across all datasets | Trains **own** YOLO model (M1 classes) using M3's notebook | §4 Data collection & annotation |
+| **M2** (data) | Lead data collection + annotation for the **electrical + structural** classes; help annotate across all datasets | Trains **own** YOLO model (M2 classes) using M3's notebook | §4 Data collection & annotation (co-lead) |
 | **M3** (lead) | All shared/system engineering + integration | Training pipeline & notebooks, **meta-classifier** (features + NN + eval), **mobile app**, **LLM** integration, end-to-end testing; trains own YOLO model | §3 Architecture, §6 Meta-classifier, §7 App, §8 App testing, §9 Results, §11 LLM |
+| **M4** (data) | Lead data collection + annotation for the **fixtures/drainage/debris** classes (2nd-pass coverage); help annotate across all datasets | Trains **own** YOLO model (M4 classes) using M3's notebook | §4 Data collection & annotation (co-lead) |
 
 Shared by all: §1 Introduction, §2 zones/classes, §10 challenges, §11 conclusion,
 logbook (each logs their own hours), screencast.
 
 ### What each person actually does, concretely
 
-- **M1 & M2 (data team):** scout the bus stop(s); photograph/film the 11 hazard
-  types (≥80 imgs/class, ≥400 per member's class set); draw YOLO bounding-box
-  annotations (e.g. in Roboflow/LabelImg/CVAT) following the rules in
-  `global_label_mapping.md`; do the 80:20 split; hand clean datasets to M3. Each
-  then runs their own model's training cell in `train_yolo_template.ipynb` (M3
-  sets it up) and records precision/recall/mAP for the report + logbook.
+- **M1, M2 & M4 (data team):** scout the bus stop(s); photograph/film the 11
+  hazard types (≥80 imgs/class, ≥400 per member's class set); draw YOLO
+  bounding-box annotations (e.g. in Roboflow/LabelImg/CVAT) following the rules
+  in `global_label_mapping.md`; do the 80:20 split; hand clean datasets to M3.
+  Each then runs their own model's training cell in `train_yolo_template.ipynb`
+  (M3 sets it up) and records precision/recall/mAP for the report + logbook.
 - **M3 (technical lead):** owns every code file in `ml/` and `mobile_app/`;
   builds the meta-classifier (feature extraction → NN → eval), the script that
   turns YOLO outputs into `features.npz`, the LLM integration, and the Flutter
   app; wires the full pipeline together; runs the live demo/testing; trains the
   M3 YOLO model too.
 
-> Each member still **owns one of the three datasets** so the "5 classes / ≥400
-> images per student" requirement is met per-person — M1 and M2 take two of the
-> three, M3 takes the third. M1/M2 may also help each other and M3 annotate.
+> Each member still **owns one of the four datasets** so the "5 classes / ≥400
+> images per student" requirement is met per-person — M1, M2 and M4 take three of
+> the four, M3 takes the fourth. Members may also help each other annotate.
 
 ---
 
@@ -93,13 +94,13 @@ data/memberN/labels/{train,val}/   ← YOLO .txt (one per image)
 The meta-classifier is **not** trained on raw images; it learns from the YOLO
 models' *outputs*. Procedure (M3 owns this):
 
-1. Train all three YOLO models (Phase 2).
-2. On a held-out labelled set of bus-stop images, run **all three** models and
+1. Train all four YOLO models (Phase 2).
+2. On a held-out labelled set of bus-stop images, run **all four** models and
    collect every detection as a `Detection` (see `feature_extraction.py`).
 3. Group detections by IoU, build a feature vector per group, and label each
    group with the **ground-truth global class** (from your annotations).
 4. Save as `data/meta_classifier/features.npz` with arrays `X` (float32,
-   N×57) and `y` (int, global ids).
+   N×70) and `y` (int, global ids).
 5. `python ml/meta_classifier/model.py --features ... --out models/meta_classifier.pt`
 
 A small script to do steps 2–4 is the next code task (not yet written — it
@@ -113,11 +114,11 @@ needs the trained YOLO weights to exist first).
 |-------|------|-------|--------|
 | **0. Foundation** ✅ | Repo structure, class/overlap design, configs, harmonisation + feature + LLM modules, plan | done | this scaffold |
 | 1. Proposal | Finalise classes/zones/roles, write proposal | all | proposal doc (deliverable) |
-| 2. Data collection + annotation | Collect + annotate ≥400 imgs per dataset, split 80:20 | **M1 & M2 lead** (M3 sets annotation standards & own dataset) | 3 datasets on Drive |
-| 3. YOLO training | Train + tune each model, record metrics | **each member trains own model** (M3 provides the pipeline/notebook) | 3× `.pt` + metrics |
+| 2. Data collection + annotation | Collect + annotate ≥400 imgs per dataset, split 80:20 | **M1, M2 & M4 lead** (M3 sets annotation standards & own dataset) | 4 datasets on Drive |
+| 3. YOLO training | Train + tune each model, record metrics | **each member trains own model** (M3 provides the pipeline/notebook) | 4× `.pt` + metrics |
 | 4. Meta-classifier | features.npz script, train NN, evaluate vs single model | **M3** | `meta_classifier.pt` + eval |
 | 5. Mobile app | Flutter app: camera → inference → meta → LLM → overlay | **M3** | app prototype |
-| 6. Integration & test | End-to-end live test, latency/lighting notes, ≥5 conflict-resolution examples | **M3 leads**, M1/M2 assist with field testing | test results |
+| 6. Integration & test | End-to-end live test, latency/lighting notes, ≥5 conflict-resolution examples | **M3 leads**, M1/M2/M4 assist with field testing | test results |
 | 7. Report + screencast | Technical report, 8–12 min screencast, logbook | all (per section ownership in §2) | submission package |
 
 ---

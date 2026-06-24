@@ -12,11 +12,14 @@ Each member's YOLO model is trained on **5 classes**:
 | M1 | pothole · uncovered_manhole · open_drain · cracked_pavement · obstacle_on_walkway |
 | M2 | pothole · dangling_wire · broken_bench · broken_shelter_panel · exposed_socket |
 | M3 | uncovered_manhole · dangling_wire · obstacle_on_walkway · fallen_branch · missing_barricade |
+| M4 | open_drain · broken_bench · broken_shelter_panel · exposed_socket · fallen_branch |
 
 When you annotate a photo, you draw a box around each hazard **and pick which of
 those 5 classes it is**. The model learns "this shape/look = pothole",
-"that = dangling_wire", etc. Across all 3 members there are **11 distinct
+"that = dangling_wire", etc. Across all 4 members there are **11 distinct
 classes** total (some are shared on purpose — those are the *overlap* classes).
+M4's 5 classes are all overlaps — it's a second detector for hazards that
+otherwise only one member would catch.
 
 ## "Per class" vs "per member" — important
 

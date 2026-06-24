@@ -2,7 +2,7 @@
 End-to-end hazard inference pipeline (server side).
 
 Ties together the existing ML modules:
-    YOLO models (member1/2/3)  ->  label harmonisation  ->  IoU grouping
+    YOLO models (member1..N)  ->  label harmonisation  ->  IoU grouping
         ->  feature vectors  ->  NN meta-classifier  ->  severity  ->  LLM action
 
 Design goal: **degrade gracefully**. The pipeline imports and runs even when
