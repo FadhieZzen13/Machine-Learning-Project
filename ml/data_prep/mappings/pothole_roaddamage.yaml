@@ -1,0 +1,22 @@
+# Pothole / road-damage datasets -> pothole, cracked_pavement, uncovered_manhole
+#   Kaggle: anggadwisunarto/potholes-detection-yolov8        (pothole only)
+#   Kaggle: lorenzoarcioni/road-damage-dataset-...           (pothole + cracks + manholes)
+#
+# Mainly for member1 (pothole id0, cracked_pavement id3, uncovered_manhole id1).
+# Also use the pothole-only set for member2 (pothole id0) to create the overlap.
+#   python prepare_dataset.py --source <dir> --member member1 --mapping mappings/pothole_roaddamage.yaml
+#   python prepare_dataset.py --source <dir> --member member2 --mapping mappings/pothole_roaddamage.yaml
+#
+# ⚠️ Run --list; road-damage datasets use codes like D00/D20/D40 or
+# "longitudinal_crack" etc. Map crack types -> cracked_pavement carefully.
+map:
+  pothole: pothole
+  Pothole: pothole
+  D40: pothole               # (example road-damage code; confirm with --list)
+  crack: cracked_pavement
+  cracks: cracked_pavement
+  longitudinal_crack: cracked_pavement
+  alligator_crack: cracked_pavement
+  D00: cracked_pavement      # (example; confirm)
+  manhole: uncovered_manhole
+  uncovered_manhole: uncovered_manhole

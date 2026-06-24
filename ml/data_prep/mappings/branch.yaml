@@ -1,0 +1,9 @@
+# Fallen branch / fallen tree dataset -> fallen_branch
+#   Roboflow: utem/branch-7qne7
+#   820 images of fallen trees/branches blocking paths
+#
+#   python prepare_dataset.py --source "D:/ML dataset/branches" --member member3 \
+#       --mapping mappings/branch.yaml
+map:
+  Branch: fallen_branch
+  "0": null    # unknown/unlabelled class -> drop

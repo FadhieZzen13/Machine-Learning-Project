@@ -1,0 +1,25 @@
+# Malaysian Bus Stop dataset (Roboflow: mtsb/bus-stop-7gy2a)
+#
+# ⚠️ UNKNOWN CLASSES until you run --list. The name suggests it detects bus-stop
+# INFRASTRUCTURE (shelter, sign, bench, bin...) rather than hazards. Two uses:
+#
+#   A) If it has hazard-relevant classes (e.g. bench/seat, obstacle, bin,
+#      pole), map them below to our classes. A broken/occupied bench -> broken_bench
+#      only if the label actually means damage; a normal bench is NOT a hazard.
+#
+#   B) If it only has infrastructure classes, it's still valuable as DOMAIN data:
+#      real Malaysian bus-stop scenes. Use those images as the backdrop for your
+#      OWN annotations of hazards (re-label in Roboflow), or as background
+#      negatives with `--keep-empty` so the model sees true bus-stop context.
+#
+# Run first:  python prepare_dataset.py --source <dir> --list
+# Then fill this map. Anything unmapped is dropped.
+map:
+  # examples — CONFIRM names with --list before trusting these:
+  bench: null              # a normal bench is not a hazard; only map if "broken"
+  obstacle: obstacle_on_walkway
+  bin: obstacle_on_walkway
+  pole: obstacle_on_walkway
+  bus_stop: null           # infrastructure, not a hazard -> drop (domain only)
+  sign: null
+  shelter: null

@@ -20,18 +20,45 @@ This is the biggest role. Work roughly in the order below.
 
 ## Part A — Set up the environment & repo 🛠️
 
-1. Install Python deps:
+**GPU training stack (VERIFIED working on this machine — RTX 3050, CUDA 12.4):**
+1. Install **GPU PyTorch FIRST** (order matters — otherwise ultralytics pulls the
+   CPU-only torch):
    ```bash
-   python -m pip install -r requirements.txt
+   python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+   python -m pip install ultralytics
+   python -m pip install -r requirements.txt   # flask, pyyaml, etc.
    ```
-2. Sanity-check the existing foundation runs (already verified, but confirm):
+2. Confirm the GPU is seen:
+   ```bash
+   python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+   # -> True NVIDIA GeForce RTX 3050 Laptop GPU
+   ```
+3. **Pretrained weights — SSL workaround (IMPORTANT).** This machine's network
+   (AV/proxy SSL inspection) breaks ultralytics' auto-download AND Python urllib.
+   The working method is `curl --ssl-no-revoke`, wrapped in a helper:
+   ```bash
+   python ml/notebooks/download_weights.py n     # fetches yolov8n.pt to repo root
+   ```
+   The training notebook calls this automatically. If you ever see
+   `CRYPT_E_NO_REVOCATION_CHECK`, run the helper instead of letting ultralytics
+   download.
+4. Sanity-check the foundation modules:
    ```bash
    python ml/meta_classifier/label_harmonization.py
-   cd ml/meta_classifier && python feature_extraction.py
-   python ml/llm/recommend_action.py        # offline fallback
+   cd ml/meta_classifier && python feature_extraction.py && cd ../..
+   python ml/llm/recommend_action.py
    ```
-3. Make sure the team understands the folder layout (point M1/M2 to their
-   `docs/instructions_memberN.md`).
+5. **Verify the whole training loop** before real data exists (synthetic data,
+   2 epochs on GPU — already confirmed working):
+   ```bash
+   python ml/notebooks/smoke_test_train.py       # delete ml/notebooks/_smoke/ after
+   ```
+6. Point M1/M2 to their `docs/instructions_memberN.md`.
+
+> **4 GB VRAM tips:** the smoke test used only 0.18 GB; for real training use
+> `yolov8n` + `batch=8` + `imgsz=640` (set in the notebook). Drop `batch`/`imgsz`
+> if you ever hit "CUDA out of memory". For faster/heavier runs, Google Colab
+> (free T4, 15 GB) runs the same notebook.
 
 ---
 

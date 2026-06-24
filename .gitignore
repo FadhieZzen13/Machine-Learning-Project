@@ -12,7 +12,9 @@ models/
 *.pt
 *.onnx
 *.tflite
-runs/            # ultralytics training output
+# ultralytics training output
+runs/
+*.log
 
 # --- Secrets ---
 .env

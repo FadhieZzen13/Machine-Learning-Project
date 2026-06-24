@@ -14,7 +14,9 @@ config/                  Class & dataset definitions (source of truth)
   memberN_data.yaml        Ultralytics dataset config per member
 docs/
   project_plan.md          Roles, architecture, schedule, rubric mapping  ← READ FIRST
+  classes_explained.md     What "class" means + photo-count targets
   global_label_mapping.md  Overlap / hierarchy table (assignment §5)
+  instructions_memberN.md  Step-by-step guide per member
   logbook_template.csv     Daily man-hour logbook (assignment §15)
 ml/
   notebooks/train_yolo_template.ipynb   Per-member YOLO training template
@@ -22,27 +24,39 @@ ml/
     label_harmonization.py  Local→global labels, synonyms, parents, context
     feature_extraction.py   IoU grouping + 57-dim feature vectors
     model.py                PyTorch NN meta-classifier (train/load)
+    build_meta_dataset.py   Run YOLO models → build features.npz for the NN
   llm/recommend_action.py   Gemini API + offline-fallback recommendations
+backend/                 Flask inference service the app calls
+  app.py                   /health, /recommend, /infer endpoints
+  pipeline.py              Full pipeline (graceful until models exist)
+mobile_app/              Flutter app (lib/ scaffolded; run `flutter create .`)
 data/                    Datasets (git-ignored — share via Drive, see §safety)
-mobile_app/              Flutter app plan (scaffold with `flutter create`)
 ```
 
-## Status (foundation)
-Scaffolding is in place and the dependency-light modules are **verified to run**:
+## Status
+**Verified to run** (executed this session):
 - `label_harmonization.py` — resolves all member/local classes to global ids ✅
 - `feature_extraction.py` — builds 57-dim feature vectors, IoU grouping ✅
 - `recommend_action.py` — offline fallback recommendations ✅
+- `build_meta_dataset.py` — imports + ground-truth matching logic ✅
+- **backend** `/health` + `/recommend` (Flask test client) ✅; `/infer` returns a
+  clear 503 listing what's missing until models are trained ✅
 
-Not yet done (needs data / heavy deps / SDKs): collecting & annotating images,
-training the YOLO models, generating `features.npz`, training the meta-classifier,
-and building the Flutter app. See [docs/project_plan.md](docs/project_plan.md) §5
-for the phased schedule.
+**Scaffolded, not yet runnable end-to-end** (needs data / heavy deps / SDKs):
+- Flutter app `lib/` written — needs `flutter create .` + `flutter pub get`
+- YOLO training, `features.npz` generation, meta-classifier training — need the
+  collected datasets + `pip install torch ultralytics`
 
-## Quick start (ML side)
+See [docs/project_plan.md](docs/project_plan.md) §5 for the phased schedule.
+
+## Quick start
 ```bash
 python -m pip install -r requirements.txt
-python ml/meta_classifier/label_harmonization.py     # sanity-check class design
-cd ml/meta_classifier && python feature_extraction.py # sanity-check features
+# sanity-check the ML modules
+python ml/meta_classifier/label_harmonization.py
+cd ml/meta_classifier && python feature_extraction.py && cd ../..
+# run the backend (app talks to this)
+python backend/app.py            # http://127.0.0.1:5000  (GET /health)
 ```
 
 ## Roles

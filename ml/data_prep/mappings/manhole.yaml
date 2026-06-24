@@ -1,0 +1,19 @@
+# Manhole datasets -> uncovered_manhole
+#   Roboflow: create-dataset-for-yolo/manhole-cover-dataset-yolo (has "Uncovered")
+#   Roboflow: swunionproject/manhole-c1n3x
+#
+# This same file works for BOTH member1 and member3 (the script looks up the
+# correct LOCAL id per member). Run it twice:
+#   python prepare_dataset.py --source <dir> --member member1 --mapping mappings/manhole.yaml
+#   python prepare_dataset.py --source <dir> --member member3 --mapping mappings/manhole.yaml
+#
+# ⚠️ Confirm the exact source class names first:
+#   python prepare_dataset.py --source <dir> --list
+# then adjust the keys below to match. Anything not listed is dropped.
+map:
+  Uncovered: uncovered_manhole
+  uncovered_manhole: uncovered_manhole
+  open_manhole: uncovered_manhole
+  manhole: uncovered_manhole   # guardrail-kfrcg/manhole-g2twv — images show open manholes
+  Covered: null                # a covered (safe) manhole is NOT our hazard
+  manhole_cover: null
