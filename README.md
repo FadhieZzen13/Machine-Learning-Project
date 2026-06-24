@@ -1,7 +1,7 @@
 # Campus Hazard Detection — Bus Stop & Waiting Area
 
-CSC4602 Machine Learning group project (3 members). A mobile app that detects
-campus maintenance/safety hazards in real time by combining **three YOLO models**
+CSC4602 Machine Learning group project (4 members). A mobile app that detects
+campus maintenance/safety hazards in real time by combining **four YOLO models**
 through a **neural-network meta-classifier**, then suggests a maintenance action
 via an **LLM**.
 
@@ -22,7 +22,7 @@ ml/
   notebooks/train_yolo_template.ipynb   Per-member YOLO training template
   meta_classifier/
     label_harmonization.py  Local→global labels, synonyms, parents, context
-    feature_extraction.py   IoU grouping + 57-dim feature vectors
+    feature_extraction.py   IoU grouping + 70-dim feature vectors (4 models)
     model.py                PyTorch NN meta-classifier (train/load)
     build_meta_dataset.py   Run YOLO models → build features.npz for the NN
   llm/recommend_action.py   Gemini API + offline-fallback recommendations
@@ -36,7 +36,7 @@ data/                    Datasets (git-ignored — share via Drive, see §safety
 ## Status
 **Verified to run** (executed this session):
 - `label_harmonization.py` — resolves all member/local classes to global ids ✅
-- `feature_extraction.py` — builds 57-dim feature vectors, IoU grouping ✅
+- `feature_extraction.py` — builds 70-dim feature vectors (4 models), IoU grouping ✅
 - `recommend_action.py` — offline fallback recommendations ✅
 - `build_meta_dataset.py` — imports + ground-truth matching logic ✅
 - **backend** `/health` + `/recommend` (Flask test client) ✅; `/infer` returns a
@@ -60,9 +60,9 @@ python backend/app.py            # http://127.0.0.1:5000  (GET /health)
 ```
 
 ## Roles
-- **M1 & M2 — data team:** lead all data collection + annotation; each trains
+- **M1, M2 & M4 — data team:** lead all data collection + annotation; each trains
   their own YOLO model with M3's pipeline (assignment requires every member to
-  train one model).
+  train one model). M4 gives second-pass coverage of under-detected classes.
 - **M3 — technical lead (project leader):** all shared/system code — training
   pipeline, meta-classifier, mobile app, LLM integration, end-to-end testing;
   trains own YOLO model too.
@@ -73,11 +73,13 @@ Full breakdown: [docs/project_plan.md §2](docs/project_plan.md).
 Each member owns one **dataset/model** of 5 classes (1:1 with the YOLO models):
 | Dataset/model | Focus | Overlap classes |
 |---------------|-------|-----------------|
-| M1 | Ground & surface | pothole, uncovered_manhole, obstacle_on_walkway |
-| M2 | Shelter & electrical | pothole, dangling_wire |
-| M3 | Obstruction & boundary | uncovered_manhole, dangling_wire, obstacle_on_walkway |
+| M1 | Ground & surface | pothole, uncovered_manhole, open_drain, obstacle_on_walkway |
+| M2 | Shelter & electrical | pothole, dangling_wire, broken_bench, broken_shelter_panel, exposed_socket |
+| M3 | Obstruction & boundary | uncovered_manhole, dangling_wire, obstacle_on_walkway, fallen_branch |
+| M4 | Fixtures, drainage & debris | open_drain, broken_bench, broken_shelter_panel, exposed_socket, fallen_branch |
 
-11 global classes total. Full table: [docs/global_label_mapping.md](docs/global_label_mapping.md).
+11 global classes total. M4 is second-pass coverage — all its classes overlap.
+Full table: [docs/global_label_mapping.md](docs/global_label_mapping.md).
 
 ## Safety
 No real hazards may be created (no exposed wires, removed covers, blocked exits,

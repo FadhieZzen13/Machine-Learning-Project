@@ -94,15 +94,16 @@ This is the core of the assignment (15 marks). Pipeline:
 
 The skeleton already exists:
 - [`ml/meta_classifier/label_harmonization.py`](../ml/meta_classifier/label_harmonization.py) — maps each model's local class to the 11 global classes (synonyms, parents, context). ✅ runs.
-- [`ml/meta_classifier/feature_extraction.py`](../ml/meta_classifier/feature_extraction.py) — IoU grouping + builds the 57-dim feature vector. ✅ runs.
+- [`ml/meta_classifier/feature_extraction.py`](../ml/meta_classifier/feature_extraction.py) — IoU grouping + builds the 70-dim feature vector (4 models). ✅ runs.
 - [`ml/meta_classifier/model.py`](../ml/meta_classifier/model.py) — PyTorch NN (Dense→ReLU→Dense→ReLU→Softmax) with a train loop. (Needs torch + data.)
 
 **What you still have to do:**
-1. **Write the dataset-builder script** (the one piece not yet written). After
-   the 3 YOLO models are trained, run all three over a labelled validation set,
-   collect detections as `Detection` objects, group by IoU, build a feature
-   vector per group, and label each with the **ground-truth** global class. Save
-   to `data/meta_classifier/features.npz` (arrays `X` = N×57 float32, `y` = global ids).
+1. **Run the dataset-builder script** ([`build_meta_dataset.py`](../ml/meta_classifier/build_meta_dataset.py),
+   already written). After the 4 YOLO models are trained, it runs all four over a
+   labelled validation set, collects detections as `Detection` objects, groups by
+   IoU, builds a feature vector per group, and labels each with the
+   **ground-truth** global class. Saves to `data/meta_classifier/features.npz`
+   (arrays `X` = N×70 float32, `y` = global ids).
    See [`docs/project_plan.md`](project_plan.md) §4 for the exact steps.
 2. **Train the meta-classifier:**
    ```bash

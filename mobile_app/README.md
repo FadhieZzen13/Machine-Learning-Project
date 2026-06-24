@@ -43,7 +43,7 @@ Add **camera permission**: `android/app/src/main/AndroidManifest.xml`
 
 ## Required features (assignment §10)
 - Real-time inference from the **device camera** (live frames).
-- Run the three YOLO models — **on-device** (TFLite/ONNX) or via a **backend**
+- Run the four YOLO models — **on-device** (TFLite/ONNX) or via a **backend**
   inference service the app calls. Decide as a group (see project_plan §7.3).
 - Show the **meta-classifier final result**, not just raw YOLO outputs.
 - Draw bounding box + final label + confidence + **severity**.

@@ -2,13 +2,14 @@
 Build the meta-classifier training dataset (features.npz).
 
 The meta-classifier learns from the YOLO models' OUTPUTS, not raw pixels. This
-script runs all three trained YOLO models over a labelled image set, groups
-their detections by IoU, builds one feature vector per object group, and labels
-each group with the ground-truth GLOBAL class (matched from the YOLO .txt
-labels). It writes X (N x 57) and y (global ids) to a .npz.
+script runs all trained YOLO models (see feature_extraction.MODEL_ORDER) over a
+labelled image set, groups their detections by IoU, builds one feature vector
+per object group, and labels each group with the ground-truth GLOBAL class
+(matched from the YOLO .txt labels). It writes X (N x feature_dim) and y (global
+ids) to a .npz. feature_dim follows MODEL_ORDER (70 with 4 members at C=11).
 
 Prerequisites (so this can actually run):
-  - All 3 YOLO models trained, weights at models/member1.pt, member2.pt, member3.pt
+  - All member YOLO models trained, weights at models/member1.pt ... member4.pt
   - A labelled image set: images + YOLO-format .txt label files. The labels must
     use GLOBAL class ids (see config/classes.yaml -> global_classes) so the
     ground truth is unambiguous. The simplest source is a held-out slice you

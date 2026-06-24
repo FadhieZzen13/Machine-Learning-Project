@@ -1,7 +1,7 @@
 # =============================================================================
 # CSC4602 - Campus Hazard Detection
 # Zone: Bus Stop & Waiting Area
-# Group: 3 members
+# Group: 4 members
 #
 # This file is the SINGLE SOURCE OF TRUTH for class definitions.
 # - Each member trains ONE YOLO model over 5 classes (per-member ids 0-4).
@@ -14,6 +14,13 @@
 #   uncovered_manhole    -> member1, member3
 #   obstacle_on_walkway  -> member1, member3
 #   dangling_wire        -> member2, member3
+#   open_drain           -> member1, member4
+#   broken_bench         -> member2, member4
+#   broken_shelter_panel -> member2, member4
+#   exposed_socket       -> member2, member4
+#   fallen_branch        -> member3, member4
+# member4 gives a SECOND detector to classes that previously had only one,
+# so the meta-classifier gets cross-model agreement on them too.
 # =============================================================================
 
 zone: "Bus Stop & Waiting Area"
@@ -25,7 +32,7 @@ members:
     classes: # local_id: name
       0: pothole              # OVERLAP (with member2)
       1: uncovered_manhole    # OVERLAP (with member3)
-      2: open_drain
+      2: open_drain           # OVERLAP (with member4)
       3: cracked_pavement
       4: obstacle_on_walkway  # OVERLAP (with member3)
 
@@ -34,9 +41,9 @@ members:
     classes:
       0: pothole              # OVERLAP (with member1)
       1: dangling_wire        # OVERLAP (with member3)
-      2: broken_bench
-      3: broken_shelter_panel
-      4: exposed_socket
+      2: broken_bench         # OVERLAP (with member4)
+      3: broken_shelter_panel # OVERLAP (with member4)
+      4: exposed_socket       # OVERLAP (with member4)
 
   member3:
     focus: "Obstruction & boundary hazards (access, barriers, debris)"
@@ -44,8 +51,17 @@ members:
       0: uncovered_manhole    # OVERLAP (with member1)
       1: dangling_wire        # OVERLAP (with member2)
       2: obstacle_on_walkway  # OVERLAP (with member1)
-      3: fallen_branch
+      3: fallen_branch        # OVERLAP (with member4)
       4: missing_barricade
+
+  member4:
+    focus: "Fixtures, drainage & debris (2nd-pass coverage of under-detected hazards)"
+    classes:
+      0: open_drain           # OVERLAP (with member1)
+      1: broken_bench         # OVERLAP (with member2)
+      2: broken_shelter_panel # OVERLAP (with member2)
+      3: exposed_socket       # OVERLAP (with member2)
+      4: fallen_branch        # OVERLAP (with member3)
 
 # --- GLOBAL class set: union of all member classes (meta-classifier output) ---
 # Order is fixed; index = global_id used by the meta-classifier softmax.

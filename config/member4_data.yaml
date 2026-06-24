@@ -1,0 +1,15 @@
+# Ultralytics dataset config - Member 4 (Fixtures, drainage & debris)
+# Secondary coverage of classes that previously had only one detector, so the
+# meta-classifier gets cross-model agreement on them.
+# Adjust `path` to an absolute path on your machine before training.
+path: ../data/member4
+train: images/train
+val: images/val
+
+# Local class ids for THIS model (must match config/classes.yaml -> member4)
+names:
+  0: open_drain            # OVERLAP with member1
+  1: broken_bench          # OVERLAP with member2
+  2: broken_shelter_panel  # OVERLAP with member2
+  3: exposed_socket        # OVERLAP with member2
+  4: fallen_branch         # OVERLAP with member3

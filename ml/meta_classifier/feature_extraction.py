@@ -36,7 +36,9 @@ import numpy as np
 from label_harmonization import HazardOntology, apply_context
 
 # Order of member models in the per-model feature blocks. Keep stable.
-MODEL_ORDER = ["member1", "member2", "member3"]
+# (member4 added for secondary coverage of under-detected classes; this grows
+#  the feature vector by one per-model block, e.g. 57 -> 70 dims at C=11.)
+MODEL_ORDER = ["member1", "member2", "member3", "member4"]
 N_MODELS = len(MODEL_ORDER)
 
 # Zones the app may report (one-hot). Extend to match your declared sub-zones.
@@ -46,7 +48,7 @@ ZONES = ["bus_stop", "waiting_area", "boarding_path", "road", "unknown"]
 @dataclass
 class Detection:
     """One raw YOLO detection from a single model."""
-    model_key: str            # "member1" | "member2" | "member3"
+    model_key: str            # "member1" | "member2" | "member3" | "member4"
     local_class_id: int       # class id local to that model
     confidence: float         # 0..1
     box_xywhn: tuple          # (x_center, y_center, w, h) normalised 0..1

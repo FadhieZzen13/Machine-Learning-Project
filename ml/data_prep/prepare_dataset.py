@@ -217,7 +217,8 @@ if __name__ == "__main__":
     ap.add_argument("--source", required=True, help="downloaded dataset folder")
     ap.add_argument("--list", action="store_true",
                     help="just print the source dataset's class names and exit")
-    ap.add_argument("--member", choices=["member1", "member2", "member3"])
+    ap.add_argument("--member",
+                    choices=["member1", "member2", "member3", "member4"])
     ap.add_argument("--mapping", help="mapping YAML path")
     ap.add_argument("--keep-empty", action="store_true",
                     help="keep images that end up with no target boxes (as background)")
