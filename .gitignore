@@ -8,10 +8,10 @@ data/meta_classifier/*.npz
 !**/README.md
 
 # --- Trained model weights (share via Drive; large binaries) ---
-models/
-*.pt
-*.onnx
-*.tflite
+yolo26n.pt
+yolov8n.pt
+yolov8s.pt
+
 # ultralytics training output
 runs/
 *.log
