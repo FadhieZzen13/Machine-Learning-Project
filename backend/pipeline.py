@@ -99,7 +99,7 @@ class HazardPipeline:
 
     # -- inference ------------------------------------------------------------
     def infer(self, image_path: str, zone_context: str = "unknown",
-              conf_thr: float = 0.25) -> list[dict]:
+              conf_thr: float = 0.35) -> list[dict]:
         """Run all YOLO models + meta-classifier on one image.
 
         Returns a list of final hazard result dicts. Raises RuntimeError with a
@@ -110,19 +110,29 @@ class HazardPipeline:
             raise RuntimeError("Pipeline not ready: " + "; ".join(st.missing()))
 
         import torch
+        from concurrent.futures import ThreadPoolExecutor
 
-        # 1) run every YOLO model, collect detections in the shared Detection form
-        detections: list[Detection] = []
-        for mk, model in self._yolo.items():
-            res = model(image_path, conf=conf_thr, verbose=False)[0]
-            for b in res.boxes:
-                xywhn = tuple(b.xywhn[0].tolist())   # normalised cx,cy,w,h
-                detections.append(Detection(
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        def _run_one(item):
+            mk, model = item
+            res = model(image_path, conf=conf_thr, iou=0.45, max_det=50,
+                        device=device, verbose=False)[0]
+            return [
+                Detection(
                     model_key=mk,
                     local_class_id=int(b.cls[0].item()),
                     confidence=float(b.conf[0].item()),
-                    box_xywhn=xywhn,
-                ))
+                    box_xywhn=tuple(b.xywhn[0].tolist()),
+                )
+                for b in res.boxes
+            ]
+
+        # 1) run all YOLO models in parallel, collect detections
+        detections: list[Detection] = []
+        with ThreadPoolExecutor(max_workers=len(self._yolo)) as ex:
+            for batch in ex.map(_run_one, self._yolo.items()):
+                detections.extend(batch)
 
         # 2) group overlapping detections, 3) build features, 4) meta-classify
         results = []
