@@ -33,3 +33,5 @@ mobile_app/.dart_tool/
 mobile_app/.flutter-plugins*
 
 .claude
+
+.gitignore

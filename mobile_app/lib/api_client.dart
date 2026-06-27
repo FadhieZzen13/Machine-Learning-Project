@@ -27,7 +27,7 @@ class ApiClient {
       ..fields["zone"] = zone
       ..files.add(await http.MultipartFile.fromPath("file", image.path));
 
-    final streamed = await req.send().timeout(const Duration(seconds: 20));
+    final streamed = await req.send().timeout(const Duration(seconds: 45));
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode == 503) {
