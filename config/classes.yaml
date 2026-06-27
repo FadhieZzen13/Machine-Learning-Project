@@ -29,12 +29,15 @@ zone: "Bus Stop & Waiting Area"
 members:
   member1:
     focus: "Ground & surface hazards (pavement, road around the stop)"
+    # NOTE: order matches the TRAINED model's exported .names (Roboflow
+    # alphabetised them). This block is the local-id -> name map used by
+    # label_harmonization, so it must mirror the model, not the design intent.
     classes: # local_id: name
-      0: pothole              # OVERLAP (with member2)
-      1: uncovered_manhole    # OVERLAP (with member3)
+      0: cracked_pavement
+      1: obstacle_on_walkway  # OVERLAP (with member3)
       2: open_drain           # OVERLAP (with member4)
-      3: cracked_pavement
-      4: obstacle_on_walkway  # OVERLAP (with member3)
+      3: pothole              # OVERLAP (with member2)
+      4: uncovered_manhole    # OVERLAP (with member3)
 
   member2:
     focus: "Shelter structure & electrical hazards (seating, roof, lighting)"
@@ -56,12 +59,14 @@ members:
 
   member4:
     focus: "Fixtures, drainage & debris (2nd-pass coverage of under-detected hazards)"
+    # NOTE: order matches the TRAINED model's exported .names. Member4 annotated
+    # in a different class order than the design table; this mirrors the model.
     classes:
-      0: open_drain           # OVERLAP (with member1)
+      0: fallen_branch        # OVERLAP (with member3)
       1: broken_bench         # OVERLAP (with member2)
       2: broken_shelter_panel # OVERLAP (with member2)
       3: exposed_socket       # OVERLAP (with member2)
-      4: fallen_branch        # OVERLAP (with member3)
+      4: open_drain           # OVERLAP (with member1)
 
 # --- GLOBAL class set: union of all member classes (meta-classifier output) ---
 # Order is fixed; index = global_id used by the meta-classifier softmax.

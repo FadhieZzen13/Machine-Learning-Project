@@ -14,6 +14,7 @@ dependencies:
   http: ^1.2.0           # call the backend /infer and /recommend
   path_provider: ^2.1.0  # evidence storage location
   intl: ^0.19.0          # timestamps for evidence records
+  google_fonts: ^6.2.1   # Chakra Petch (HUD) + JetBrains Mono (data) — field-instrument UI
 
 dev_dependencies:
   flutter_lints: ^4.0.0

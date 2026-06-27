@@ -1,0 +1,483 @@
+<!--
+  Campus Hazard Detection — UI design blueprint (Field Instrument HUD)
+  Source of truth for the Flutter translation (mobile_app/lib/).
+  Data contract mirrors backend/pipeline.py -> HazardResult:
+    hazardClass, confidence(0..1), severity(high|medium|low),
+    boxXywhn[cx,cy,w,h], numModelsAgree, recommendedAction
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hazard Detect — UI Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* ---- instrument palette ---- */
+    --bg:        #070B0C;   /* outer */
+    --panel:     #0C1213;   /* device body */
+    --panel-2:   #11191A;   /* raised rows */
+    --line:      #1C2829;   /* hairlines */
+    --teal:      #2DE1C2;   /* system accent (continues app teal seed) */
+    --ink:       #E8EFEE;   /* primary text */
+    --ink-mute:  #5E7273;   /* secondary text */
+    --ink-faint: #38484A;   /* tertiary / disabled */
+    /* ---- severity semantics (RESERVED) ---- */
+    --sev-high:  #FF4438;
+    --sev-med:   #FF9A1F;
+    --sev-low:   #FFD23D;
+    --scan:      rgba(45,225,194,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(120% 80% at 50% -10%, #0d1718 0%, var(--bg) 60%);
+    min-height: 100vh;
+    display: flex; flex-wrap: wrap; gap: 40px;
+    align-items: flex-start; justify-content: center;
+    padding: 48px 24px;
+    font-family: "JetBrains Mono", monospace;
+    color: var(--ink);
+  }
+
+  /* ===== phone frame ===== */
+  .phone {
+    width: 380px; height: 800px;
+    background: var(--panel);
+    border-radius: 38px;
+    border: 1px solid var(--line);
+    box-shadow:
+      0 0 0 8px #060909,
+      0 30px 80px -20px rgba(0,0,0,0.9),
+      inset 0 0 60px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .phone__label {
+    position: absolute; top: -28px; left: 4px;
+    font-family: "Chakra Petch"; font-size: 11px; letter-spacing: 2px;
+    color: var(--ink-mute); text-transform: uppercase;
+  }
+
+  /* ===== status rail (top) ===== */
+  .rail {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 12px;
+    font-family: "Chakra Petch"; font-size: 11px; letter-spacing: 1.5px;
+    color: var(--ink-mute); text-transform: uppercase;
+    z-index: 5;
+  }
+  .rail__brand { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+  .rail__mark {
+    width: 16px; height: 16px; position: relative;
+  }
+  .rail__mark::before, .rail__mark::after {
+    content: ""; position: absolute; background: var(--teal);
+  }
+  .rail__mark::before { inset: 0 6px; }       /* vertical bar */
+  .rail__mark::after  { inset: 6px 0; }        /* horizontal bar -> plus/crosshair */
+  .rail__brand b { font-weight: 700; letter-spacing: 2px; }
+  .rail__conn { display: flex; align-items: center; gap: 7px; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 8px var(--teal);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  /* ===== viewfinder ===== */
+  .view {
+    position: relative; flex: 1;
+    margin: 0 12px;
+    border-radius: 18px; overflow: hidden;
+    background:
+      linear-gradient(155deg, #16201f 0%, #0b1313 45%, #0a1011 100%);
+  }
+  /* faux scene */
+  .view__scene {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(60,90,88,.25) 0%, rgba(10,16,16,.0) 35%),
+      repeating-linear-gradient(90deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px),
+      repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+  }
+  .view__scene::after { /* ground / pavement hint */
+    content:""; position:absolute; left:-10%; right:-10%; bottom:-5%; height:55%;
+    background: linear-gradient(180deg, transparent, rgba(40,60,58,.35));
+    transform: perspective(300px) rotateX(48deg); transform-origin: bottom;
+  }
+  .scanline {
+    position:absolute; left:0; right:0; height:120px;
+    background: linear-gradient(180deg, transparent, var(--scan), transparent);
+    animation: sweep 3.2s linear infinite;
+  }
+  @keyframes sweep { 0%{top:-120px} 100%{top:100%} }
+
+  /* corner brackets */
+  .bracket { position:absolute; width:26px; height:26px; border:2px solid var(--teal); opacity:.8; }
+  .bracket.tl { top:12px; left:12px; border-right:0; border-bottom:0; }
+  .bracket.tr { top:12px; right:12px; border-left:0; border-bottom:0; }
+  .bracket.bl { bottom:12px; left:12px; border-right:0; border-top:0; }
+  .bracket.br { bottom:12px; right:12px; border-left:0; border-top:0; }
+
+  /* zone tag */
+  .view__zone {
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    font-family:"Chakra Petch"; font-size:10px; letter-spacing:2px;
+    color: var(--teal); background: rgba(7,12,12,.55);
+    border:1px solid var(--line); border-radius:4px; padding:4px 10px;
+    text-transform:uppercase;
+  }
+
+  /* ---- detection box (instrument-style corner box) ---- */
+  .det {
+    position:absolute; border:1.5px solid var(--c);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 0 18px -4px var(--c);
+  }
+  .det::before, .det::after,
+  .det > i::before, .det > i::after {
+    content:""; position:absolute; width:11px; height:11px; border:2px solid var(--c);
+  }
+  .det::before { top:-2px; left:-2px; border-right:0; border-bottom:0; }
+  .det::after  { top:-2px; right:-2px; border-left:0; border-bottom:0; }
+  .det > i::before { bottom:-2px; left:-2px; border-right:0; border-top:0; }
+  .det > i::after  { bottom:-2px; right:-2px; border-left:0; border-top:0; }
+  .det__tag {
+    position:absolute; top:-22px; left:-2px;
+    background: var(--c); color:#070B0C;
+    font-family:"Chakra Petch"; font-weight:700; font-size:10px; letter-spacing:1px;
+    padding:2px 7px; white-space:nowrap; text-transform:uppercase;
+  }
+
+  /* ===== detection sheet ===== */
+  .sheet {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border-top:1px solid var(--line);
+    border-radius: 20px 20px 0 0;
+    padding: 10px 14px 14px;
+    z-index: 4;
+  }
+  .sheet__grip {
+    width:42px; height:4px; border-radius:2px; background:var(--line);
+    margin: 2px auto 12px;
+  }
+  .sheet__head {
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:10px; padding:0 2px;
+  }
+  .sheet__title {
+    font-family:"Chakra Petch"; font-size:12px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--ink);
+  }
+  .sheet__count { color:var(--teal); }
+  .sheet__meta { font-size:10px; color:var(--ink-mute); letter-spacing:1px; }
+
+  /* hazard row */
+  .haz {
+    position:relative;
+    background: var(--panel-2);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c);
+    border-radius:10px;
+    padding:11px 12px 12px;
+    margin-bottom:9px;
+  }
+  .haz__top { display:flex; align-items:center; gap:8px; }
+  .haz__name {
+    font-family:"Chakra Petch"; font-weight:600; font-size:14px; letter-spacing:.5px;
+    color:var(--ink); flex:1; text-transform:uppercase;
+  }
+  .badge {
+    font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+    padding:3px 7px; border-radius:4px;
+    color:var(--c); background: color-mix(in srgb, var(--c) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--c) 40%, transparent);
+  }
+  .haz__metrics {
+    display:flex; align-items:center; gap:14px; margin-top:9px;
+    font-size:11px; color:var(--ink-mute); letter-spacing:.5px;
+  }
+  .metric b { color:var(--ink); font-weight:600; }
+  /* confidence bar */
+  .conf { display:flex; align-items:center; gap:7px; flex:1; }
+  .conf__track { flex:1; height:4px; background:var(--line); border-radius:2px; overflow:hidden; }
+  .conf__fill { height:100%; background:var(--c); border-radius:2px; }
+  /* agreement pips */
+  .pips { display:flex; gap:3px; }
+  .pip { width:8px; height:8px; border:1px solid var(--c); transform:rotate(45deg); }
+  .pip.on { background:var(--c); }
+  /* advisory */
+  .haz__advice {
+    display:flex; gap:7px; margin-top:10px; padding-top:10px;
+    border-top:1px dashed var(--line);
+    font-size:11px; line-height:1.45; color:var(--ink-mute);
+  }
+  .haz__advice span:first-child { color:var(--teal); font-family:"Chakra Petch"; font-size:9px; letter-spacing:1px; padding-top:1px; }
+  .haz__advice b { color:var(--ink); font-weight:400; }
+
+  /* ===== action bar ===== */
+  .actions {
+    display:flex; gap:10px; padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+    background: var(--panel);
+    border-top:1px solid var(--line);
+  }
+  .btn {
+    flex:1; height:54px; border:none; border-radius:12px; cursor:pointer;
+    font-family:"Chakra Petch"; font-weight:700; font-size:13px; letter-spacing:2px;
+    text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:9px;
+  }
+  .btn svg { width:18px; height:18px; }
+  .btn--primary { flex:1.6; background:var(--teal); color:#06100E; box-shadow:0 8px 22px -8px var(--teal); }
+  .btn--ghost   { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .btn--ghost:disabled { color:var(--ink-faint); }
+
+  /* ===== status line ===== */
+  .status {
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    padding:9px; font-size:11px; letter-spacing:1px; color:var(--ink-mute);
+    background:var(--panel); border-top:1px solid var(--line);
+  }
+  .status .dot { width:6px; height:6px; }
+
+  /* ===== STATE VARIANTS (smaller frames) ===== */
+  .mini { width:300px; height:560px; }
+  .mini .view { margin:0 10px; }
+
+  /* idle reticle */
+  .reticle { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .reticle__ring {
+    width:90px; height:90px; border:1.5px dashed var(--teal); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; opacity:.85;
+  }
+  .reticle__ring::before { content:""; width:90px; height:1px; background:var(--teal); opacity:.4; position:absolute; }
+  .reticle__ring::after  { content:""; height:90px; width:1px; background:var(--teal); opacity:.4; position:absolute; }
+  .reticle__dot { width:8px; height:8px; background:var(--teal); border-radius:50%; box-shadow:0 0 12px var(--teal); }
+  .reticle__txt { font-family:"Chakra Petch"; font-size:12px; letter-spacing:3px; color:var(--ink-mute); text-transform:uppercase; }
+
+  /* detecting */
+  .detecting { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; background:rgba(7,11,12,.35); }
+  .spinner {
+    width:64px; height:64px; border:2px solid var(--line); border-top-color:var(--teal);
+    border-radius:50%; animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .detecting__txt { font-family:"Chakra Petch"; font-size:12px; letter-spacing:3px; color:var(--teal); text-transform:uppercase; }
+
+  /* not ready */
+  .notready { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:30px; text-align:center; }
+  .notready__icon {
+    width:54px; height:54px; border:2px solid var(--sev-med); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Chakra Petch"; font-weight:700; font-size:28px; color:var(--sev-med);
+  }
+  .notready__title { font-family:"Chakra Petch"; font-size:13px; letter-spacing:2px; color:var(--ink); text-transform:uppercase; }
+  .notready__body { font-size:11px; line-height:1.6; color:var(--ink-mute); }
+  .notready__list { font-size:10px; color:var(--sev-med); margin-top:4px; text-align:left; display:inline-block; }
+
+  .caption {
+    width:100%; text-align:center; margin-top:14px;
+    font-family:"Chakra Petch"; font-size:11px; letter-spacing:2px;
+    color:var(--ink-faint); text-transform:uppercase;
+  }
+  .group { display:flex; flex-direction:column; align-items:center; }
+</style>
+</head>
+<body>
+
+  <!-- ============ PRIMARY SCREEN — populated detection ============ -->
+  <div class="group">
+  <div class="phone">
+    <span class="phone__label">▢ main · detection active</span>
+
+    <!-- top rail -->
+    <div class="rail">
+      <div class="rail__brand"><span class="rail__mark"></span><b>HAZARD&nbsp;DETECT</b></div>
+      <div class="rail__conn"><span class="dot"></span> LINKED</div>
+    </div>
+
+    <!-- viewfinder -->
+    <div class="view">
+      <div class="view__scene"></div>
+      <div class="scanline"></div>
+      <div class="bracket tl"></div><div class="bracket tr"></div>
+      <div class="bracket bl"></div><div class="bracket br"></div>
+      <div class="view__zone">◎ ZONE · BUS STOP</div>
+
+      <!-- detection: HIGH (uncovered manhole) -->
+      <div class="det" style="--c:var(--sev-high); left:14%; top:46%; width:42%; height:30%;">
+        <i></i><div class="det__tag">UNCOVERED MANHOLE · 94%</div>
+      </div>
+      <!-- detection: MEDIUM (dangling wire) -->
+      <div class="det" style="--c:var(--sev-med); left:58%; top:20%; width:30%; height:34%;">
+        <i></i><div class="det__tag">DANGLING WIRE · 71%</div>
+      </div>
+    </div>
+
+    <!-- detection sheet -->
+    <div class="sheet">
+      <div class="sheet__grip"></div>
+      <div class="sheet__head">
+        <div class="sheet__title">Detections <span class="sheet__count">02</span></div>
+        <div class="sheet__meta">FUSED · 4 MODELS</div>
+      </div>
+
+      <!-- HIGH -->
+      <div class="haz" style="--c:var(--sev-high);">
+        <div class="haz__top">
+          <div class="haz__name">Uncovered Manhole</div>
+          <div class="badge">High</div>
+        </div>
+        <div class="haz__metrics">
+          <div class="conf">
+            <div class="conf__track"><div class="conf__fill" style="width:94%"></div></div>
+            <b>94%</b>
+          </div>
+          <div class="metric pips-wrap" title="model agreement">
+            <span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span>
+          </div>
+        </div>
+        <div class="haz__advice">
+          <span>◇ ADVISORY</span>
+          <b>Cordon off immediately &amp; report to facilities — open shaft is a fall risk in the waiting area.</b>
+        </div>
+      </div>
+
+      <!-- MEDIUM -->
+      <div class="haz" style="--c:var(--sev-med);">
+        <div class="haz__top">
+          <div class="haz__name">Dangling Wire</div>
+          <div class="badge">Medium</div>
+        </div>
+        <div class="haz__metrics">
+          <div class="conf">
+            <div class="conf__track"><div class="conf__fill" style="width:71%"></div></div>
+            <b>71%</b>
+          </div>
+          <div class="metric pips-wrap" title="model agreement">
+            <span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip"></i><i class="pip"></i></span>
+          </div>
+        </div>
+        <div class="haz__advice">
+          <span>◇ ADVISORY</span>
+          <b>Keep clear; flag to maintenance to verify the line is de-energised before removal.</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- status -->
+    <div class="status"><span class="dot"></span> 2 HAZARD(S) DETECTED · 312&nbsp;MS</div>
+
+    <!-- actions -->
+    <div class="actions">
+      <button class="btn btn--primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Detect
+      </button>
+      <button class="btn btn--ghost">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+  <div class="caption">Primary · active detection</div>
+  </div>
+
+  <!-- ============ STATE VARIANTS ============ -->
+
+  <!-- IDLE -->
+  <div class="group">
+  <div class="phone mini">
+    <div class="rail">
+      <div class="rail__brand"><span class="rail__mark"></span><b>HAZARD&nbsp;DETECT</b></div>
+      <div class="rail__conn"><span class="dot"></span> LINKED</div>
+    </div>
+    <div class="view">
+      <div class="view__scene"></div>
+      <div class="bracket tl"></div><div class="bracket tr"></div>
+      <div class="bracket bl"></div><div class="bracket br"></div>
+      <div class="reticle">
+        <div class="reticle__ring"><span class="reticle__dot"></span></div>
+        <div class="reticle__txt">Awaiting&nbsp;Scan</div>
+      </div>
+    </div>
+    <div class="status"><span class="dot"></span> READY · TAP DETECT TO SCAN</div>
+    <div class="actions">
+      <button class="btn btn--primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Detect
+      </button>
+      <button class="btn btn--ghost" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+  <div class="caption">State · idle / empty</div>
+  </div>
+
+  <!-- DETECTING -->
+  <div class="group">
+  <div class="phone mini">
+    <div class="rail">
+      <div class="rail__brand"><span class="rail__mark"></span><b>HAZARD&nbsp;DETECT</b></div>
+      <div class="rail__conn"><span class="dot"></span> LINKED</div>
+    </div>
+    <div class="view">
+      <div class="view__scene"></div>
+      <div class="scanline"></div>
+      <div class="bracket tl"></div><div class="bracket tr"></div>
+      <div class="bracket bl"></div><div class="bracket br"></div>
+      <div class="detecting">
+        <div class="spinner"></div>
+        <div class="detecting__txt">Analysing&nbsp;Frame</div>
+      </div>
+    </div>
+    <div class="status"><span class="dot"></span> RUNNING 4 MODELS + META-CLASSIFIER…</div>
+    <div class="actions">
+      <button class="btn btn--primary" style="opacity:.55;">
+        <span class="spinner" style="width:18px;height:18px;border-width:2px;"></span>
+        Working
+      </button>
+      <button class="btn btn--ghost" disabled>Save</button>
+    </div>
+  </div>
+  <div class="caption">State · detecting</div>
+  </div>
+
+  <!-- NOT READY -->
+  <div class="group">
+  <div class="phone mini">
+    <div class="rail">
+      <div class="rail__brand"><span class="rail__mark"></span><b>HAZARD&nbsp;DETECT</b></div>
+      <div class="rail__conn"><span class="dot" style="background:var(--sev-med);box-shadow:0 0 8px var(--sev-med);"></span> DEGRADED</div>
+    </div>
+    <div class="view">
+      <div class="view__scene"></div>
+      <div class="bracket tl" style="border-color:var(--sev-med)"></div><div class="bracket tr" style="border-color:var(--sev-med)"></div>
+      <div class="bracket bl" style="border-color:var(--sev-med)"></div><div class="bracket br" style="border-color:var(--sev-med)"></div>
+      <div class="notready">
+        <div class="notready__icon">!</div>
+        <div class="notready__title">Models Not Ready</div>
+        <div class="notready__body">The detection pipeline is reachable but not all weights are loaded.</div>
+        <div class="notready__list">
+          ▸ missing models/member2.pt<br/>
+          ▸ missing models/meta_classifier.pt
+        </div>
+      </div>
+    </div>
+    <div class="status"><span class="dot" style="background:var(--sev-med);box-shadow:0 0 8px var(--sev-med);"></span> /INFER UNAVAILABLE · 503</div>
+    <div class="actions">
+      <button class="btn btn--primary" style="background:var(--ink-faint);color:var(--ink-mute);box-shadow:none;">
+        Detect
+      </button>
+      <button class="btn btn--ghost" disabled>Save</button>
+    </div>
+  </div>
+  <div class="caption">State · models not ready</div>
+  </div>
+
+</body>
+</html>

@@ -6,11 +6,11 @@ with the course instructor instead.** Only this structure is tracked.
 
 ```
 data/
-  member1/  member2/  member3/        # one per member's YOLO model
+  member1/ member2/ member3/ member4/ # one per member's YOLO model
     images/train/   images/val/       # .jpg / .png  (80:20 split)
     labels/train/   labels/val/       # YOLO-format .txt, one per image
   meta_classifier/
-    features.npz                      # X (N×57 float32), y (global ids) — generated
+    features.npz                      # X (N×70 float32), y (global ids) — generated
 ```
 
 ## Requirements (per member)
