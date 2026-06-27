@@ -2,6 +2,7 @@ import "package:camera/camera.dart";
 import "package:flutter/material.dart";
 
 import "screens/camera_screen.dart";
+import "theme.dart";
 
 late List<CameraDescription> cameras;
 
@@ -23,10 +24,7 @@ class HazardApp extends StatelessWidget {
     return MaterialApp(
       title: "Campus Hazard Detection",
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
+      theme: Hud.themeData(),
       home: CameraScreen(cameras: cameras),
     );
   }

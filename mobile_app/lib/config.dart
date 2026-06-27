@@ -5,7 +5,7 @@
 /// - iOS simulator:    http://127.0.0.1:5000
 /// - Physical phone:   http://<your-computer-LAN-IP>:5000  (same Wi-Fi)
 class AppConfig {
-  static const String backendBaseUrl = "http://10.0.2.2:5000";
+  static const String backendBaseUrl = "http://192.168.1.5:5000";
 
   /// How often to auto-capture a frame for inference, in milliseconds.
   static const int autoDetectIntervalMs = 1500;
