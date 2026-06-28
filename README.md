@@ -5,6 +5,12 @@ campus maintenance/safety hazards in real time by combining **four YOLO models**
 through a **neural-network meta-classifier**, then suggests a maintenance action
 via an **LLM**.
 
+Member 1-Varshan
+Member 2-Reydan
+Member 3-Fadhie
+Member 4-Ahmad Ilham Zuhairi
+
+
 **Declared data-collection zone:** bus stop & waiting area.
 
 ## Repository layout
